@@ -1,5 +1,6 @@
-import type { StringRecordId, Surreal } from "surrealdb";
-import type { SurrealResponse } from "@/types/SurrealResponse";
+import type { Surreal } from "surrealdb";
+import type { Product } from "@/types/Product";
+
 import { SurrealConnection } from "./surreal-connection";
 
 async function getInfo() {
@@ -19,15 +20,18 @@ async function getInfo() {
   }
 }
 
-async function createPost(newPost: number) {
+async function createProduct(newProduct: Product) {
   const connection: SurrealConnection = new SurrealConnection();
 
   const database: Surreal = await connection.getSurrealInstance();
 
   try {
-    const result = await database.query(`CREATE ONLY post content $content;`, {
-      content: newPost,
-    });
+    const result = await database.query(
+      `CREATE ONLY product content $content;`,
+      {
+        content: newProduct,
+      },
+    );
 
     database.close();
     return result;
@@ -37,4 +41,4 @@ async function createPost(newPost: number) {
   }
 }
 
-export { getInfo, createPost };
+export { getInfo, createProduct };

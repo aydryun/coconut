@@ -9,6 +9,12 @@
     "ignoreUnknown": true,
     "includes": ["**", "!node_modules", "!.next", "!dist", "!build"]
   },
+  "css": {
+    "parser": {
+      "cssModules": false,
+      "tailwindDirectives": true
+    }
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
@@ -19,7 +25,8 @@
     "rules": {
       "recommended": true,
       "suspicious": {
-        "noUnknownAtRules": "off"
+        "noUnknownAtRules": "off",
+        "noExplicitAny": "off"
       }
     },
     "domains": {
