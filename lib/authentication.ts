@@ -9,11 +9,7 @@ async function connectToDatabase() {
   try {
     db = new Surreal();
 
-    console.log(process.env);
-
     await db.connect(process.env.SURREALDB_HOST || "");
-
-    console.log("test");
 
     await db.signin({
       namespace: process.env.SURREALDB_NAMESPACE || "",
