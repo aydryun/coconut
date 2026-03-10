@@ -1,0 +1,57 @@
+name: CI
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+  pages: write
+
+jobs:
+  my-job:
+    name: my-job
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun (latest)
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 'latest'
+
+      - name: Cache Bun and node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun
+            .bun
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build (prefer package.json script, fallback to bun build -> ./dist)
+        run: |
+          if [ -f package.json ] && grep -q "\"build\"" package.json; then
+            echo "Running project build script: bun run build"
+            bun run build
+          else
+            echo "No build script found in package.json — running 'bun build' to ./dist"
+            bun build --outdir=./dist || { echo "::error ::bun build failed; adjust build command or add a build script in package.json"; exit 1; }
+          fi
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
