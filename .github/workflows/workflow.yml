@@ -6,12 +6,12 @@ on:
     branches: [ master ]
 
 permissions:
-  contents: read
+  contents: write
   pages: write
 
 jobs:
   my-job:
-    name: my-job
+    name: Deploiemet
     runs-on: ubuntu-latest
     env:
       CI: true
@@ -49,9 +49,10 @@ jobs:
             bun build --outdir=./dist || { echo "::error ::bun build failed; adjust build command or add a build script in package.json"; exit 1; }
           fi
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Upload artifact for GitHub Pages
+        uses: actions/upload-pages-artifact@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          publish_branch: gh-pages
+          path: ./dist
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
