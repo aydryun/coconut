@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
-    "format": "biome format --write",
-    "export": "next export"
+    "format": "biome format --write"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
