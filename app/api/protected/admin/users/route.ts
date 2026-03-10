@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { StringRecordId } from "surrealdb";
 import { connectToDatabase } from "@/lib/authentication";
 import { extractTokenFromHeader, verifyToken } from "@/lib/jwt";
 import type { SurrealResponse } from "@/types/SurrealResponse";
@@ -109,8 +110,8 @@ export async function DELETE(request: NextRequest) {
 
     const db = await connectToDatabase();
     const result: SurrealResponse<any> = await db.query(
-      "DELETE FROM user WHERE id = $id RETURN BEFORE;",
-      { id: `user:${id}` },
+      "DELETE ONLY $id RETURN BEFORE;",
+      { id: new StringRecordId(`user:${id}`) },
     );
     return NextResponse.json(result[0]);
   } catch (error) {

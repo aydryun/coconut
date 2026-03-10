@@ -1,4 +1,4 @@
-name: Deploy Next.js site to Pages with Bun and Biome
+name: Lint and Build with Bun
 
 on:
   # Runs on pushes to the default branch
@@ -8,19 +8,8 @@ on:
   # Allows you to trigger this workflow manually
   workflow_dispatch:
 
-# Permissions nécessaires pour déployer sur GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Évite les exécutions conflictuelles
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
-  build:
+  lint-and-build:
     runs-on: ubuntu-latest
     steps:
       # Étape 1 : Checkout du dépôt
@@ -51,40 +40,8 @@ jobs:
 
       # Étape 5 : Lint avec Biome
       - name: Lint code with Biome
-        run: |
-          if [ -f "biome.json" ]; then
-            echo "Running Biome..."
-            bun x biome check
-          else
-            echo "::error ::Biome configuration (biome.json) not found!"
-            exit 1
-          fi
+        run: bun run lint
 
       # Étape 6 : Build Next.js
       - name: Build Next.js site
-        run: |
-          if [ -f package.json ] && grep -q "\"build\"" package.json; then
-            echo "Building the project..."
-            bun run build
-          else
-            echo "::error ::Build script not found in package.json!"
-            exit 1
-          fi
-
-      # Étape 7 : Télécharger les artefacts
-      - name: Upload artifact for deployment
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./out # Répertoire par défaut pour `next export`
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      # Étape 8 : Déployer sur GitHub Pages
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        run: bun run build

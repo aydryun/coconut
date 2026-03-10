@@ -69,10 +69,9 @@ async function updateCustomer(id: string, customer: Partial<Customer>) {
 
 async function deleteCustomer(id: string) {
   return withDatabase(async (db) => {
-    const result = await db.query(
-      "DELETE FROM customer WHERE id = $id RETURN BEFORE;",
-      { id: `customer:${id}` },
-    );
+    const result: any = await db.query("DELETE ONLY $id RETURN BEFORE;", {
+      id: new StringRecordId(`customer:${id}`),
+    });
     return result[0];
   });
 }
@@ -126,10 +125,9 @@ async function updateProduct(id: string, product: Partial<Product>) {
 
 async function deleteProduct(id: string) {
   return withDatabase(async (db) => {
-    const result = await db.query(
-      "DELETE FROM product WHERE id = $id RETURN BEFORE;",
-      { id: `product:${id}` },
-    );
+    const result: any = await db.query("DELETE ONLY $id RETURN BEFORE;", {
+      id: new StringRecordId(`product:${id}`),
+    });
     return result[0];
   });
 }
@@ -196,8 +194,8 @@ async function updateOrder(id: string, order: Partial<Order>) {
 
 async function deleteOrder(id: string) {
   return withDatabase(async (db) => {
-    const result = await db.query("DELETE $id RETURN BEFORE;", {
-      id: `order:${id}`,
+    const result: any = await db.query("DELETE ONLY $id RETURN BEFORE;", {
+      id: new StringRecordId(`order:${id}`),
     });
     return result[0];
   });
