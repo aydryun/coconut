@@ -1,31 +1,40 @@
-name: CI
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+name: Deploy Next.js site to Pages with Bun and Biome
 
+on:
+  # Runs on pushes to the default branch
+  push:
+    branches: ["master"]
+
+  # Allows you to trigger this workflow manually
+  workflow_dispatch:
+
+# Permissions nécessaires pour déployer sur GitHub Pages
 permissions:
   contents: read
   pages: write
+  id-token: write
+
+# Évite les exécutions conflictuelles
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  my-job:
-    name: Deployment
+  build:
     runs-on: ubuntu-latest
-    env:
-      CI: true
-
     steps:
+      # Étape 1 : Checkout du dépôt
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Bun (latest)
+      # Étape 2 : Installer Bun
+      - name: Install Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 'latest'
 
-      - name: Cache Bun and node_modules
+      # Étape 3 : Cache Bun et node_modules
+      - name: Cache dependencies
         uses: actions/cache@v4
         with:
           path: |
@@ -36,22 +45,46 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-bun-
 
+      # Étape 4 : Installer les dépendances avec Bun
       - name: Install dependencies
         run: bun install
 
-      - name: Build (prefer package.json script, fallback to bun build -> ./dist)
+      # Étape 5 : Lint avec Biome
+      - name: Lint code with Biome
         run: |
-          if [ -f package.json ] && grep -q "\"build\"" package.json; then
-            echo "Running project build script: bun run build"
-            bun run build
+          if [ -f "biome.json" ]; then
+            echo "Running Biome..."
+            bun x biome check
           else
-            echo "No build script found in package.json — running 'bun build' to ./dist"
-            bun build --outdir=./dist || { echo "::error ::bun build failed; adjust build command or add a build script in package.json"; exit 1; }
+            echo "::error ::Biome configuration (biome.json) not found!"
+            exit 1
           fi
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      # Étape 6 : Build Next.js
+      - name: Build Next.js site
+        run: |
+          if [ -f package.json ] && grep -q "\"build\"" package.json; then
+            echo "Building the project..."
+            bun run build && bun run export
+          else
+            echo "::error ::Build script not found in package.json!"
+            exit 1
+          fi
+
+      # Étape 7 : Télécharger les artefacts
+      - name: Upload artifact for deployment
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          publish_branch: gh-pages
+          path: ./out # Répertoire par défaut pour `next export`
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # Étape 8 : Déployer sur GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
