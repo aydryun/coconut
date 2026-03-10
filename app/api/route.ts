@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getInfo } from "@/lib/database";
+import { getCustomers } from "@/lib/database";
 
 export async function GET() {
-  const res = await getInfo();
+  const res = await getCustomers();
 
   return NextResponse.json({
     name: "Api Txek",
